@@ -1,0 +1,22 @@
+{
+  "name": "chaincode",
+  "version": "1.0.0",
+  "description": "chaincode implemented in node.js",
+  "engines": {
+    "node": ">=8.4.0",
+    "npm": ">=5.3.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engine-strict": true,
+  "license": "Apache-2.0",
+  "dependencies": {
+    "chaincode-node-storage": "git+https://git@github.com/arafeh94/chaincode-node-storage.git",
+    "fabric-shim": "^1.2.0",
+    "ml-expectation-maximization": "^0.1.0"
+  },
+  "devDependencies": {
+    "@theledger/fabric-mock-stub": "^4.0.0"
+  }
+}
