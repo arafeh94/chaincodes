@@ -120,11 +120,10 @@ async function main() {
         res = await ccobservations.mockInvoke("tx2", ['put', 'observation', atomic(), observation(4, 1, {activity: '3'})]);
         res = await ccobservations.mockInvoke("tx2", ['put', 'observation', atomic(), observation(4, 1, {activity: '1'})]);
 
-        console.clear();
         res = await cctaskpts.mockInvoke("tx3", ['quality', '1']);
-        res = await cctaskpts.mockInvoke("tx3", ['list', 'taskpts']);
-        res = await ccreport.mockInvoke("tx3", ['report', '1']);
         sts(res);
+        // res = await cctaskpts.mockInvoke("tx3", ['report', '1']);
+        // sts(res);
 
     }
 

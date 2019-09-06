@@ -2,8 +2,6 @@ const StorageChaincode = require('chaincode-node-storage');
 const ExpectationMaximization = require('ml-expectation-maximization').ExpectationMaximization;
 const shim = require('fabric-shim');
 const tools = require('chaincode-node-storage/chaincode-tools');
-
-
 module.exports = class ReferenceChaincode extends StorageChaincode {
     /**
      * ===========================================================================
@@ -15,35 +13,32 @@ module.exports = class ReferenceChaincode extends StorageChaincode {
      * data to fit for expectation maximisation are 2d array x=>user, y=>feature.
      * feature present the count of each activity
      * @param args
-     * @returns {Promise<string>}
      */
     async quality(args) {
+        console.log(this.createTaskpts('asd', 'asd', 10, 10));
         if (args.length < 1) {
             throw new Error('incorrect number of arguments, taskId at pos 0 is required');
         }
         let tid = args[0];
         let exists = await this.getTaskpts([tid]).then(value => JSON.parse(value));
-        if (exists && exists.length > 0) {
-            throw new Error("quality if task {" + tid + "} already calculated");
+        let data = await super.invokeChaincode('ccobservations', ['aggregate', tid], 'observations').then(value => JSON.parse(value));
+        if (!data || tools.sizeOf(data) == 0) {
+            throw new Error('no observations, please ensure you input the correct task id');
         } else {
-            let data = await super.invokeChaincode('ccobservations', ['aggregate', tid], 'observations').then(value => JSON.parse(value));
-            if (!data || tools.sizeOf(data) == 0) {
-                throw new Error('no observations, please ensure you input the correct task id');
-            } else {
-                let training = [];
-                for (let uid in data) {
-                    training.push(data[uid]);
-                }
-                const em = new ExpectationMaximization({numClusters: 1});
-                em.train(training);
-                //TODO: need a method to calculate the scores
-                let scores = em.predict(training);
-                for (let uid in data) {
-                    let taskpts = this.createTaskpts(tid, uid, 10, 10);
-                    super.put(['taskpts', tools.uuid(), taskpts])
-                }
-                return "done";
+            let training = [];
+            for (let uid in data) {
+                training.push(data[uid]);
             }
+            const em = new ExpectationMaximization({numClusters: 1});
+            em.train(training);
+            // TODO: need a method to calculate the scores
+            let scores = em.predict(training);
+            let results = [];
+            for (let uid in data) {
+                let taskpts = this.createTaskpts(tid, uid, 10, 10);
+                results.push(taskpts);
+            }
+            return Buffer.from(JSON.stringify(results));
         }
     }
 
@@ -195,4 +190,8 @@ module.exports = class ReferenceChaincode extends StorageChaincode {
         }
     }
 
+
+    async addUser(args) {
+        return super.put(['user', args[0], args[1]]);
+    }
 };
