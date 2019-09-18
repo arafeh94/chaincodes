@@ -1,5 +1,4 @@
 const StorageChaincode = require('chaincode-node-storage');
-const ExpectationMaximization = require('ml-expectation-maximization').ExpectationMaximization;
 const shim = require('fabric-shim');
 const tools = require('chaincode-node-storage/chaincode-tools');
 module.exports = class ReferenceChaincode extends StorageChaincode {
@@ -25,22 +24,39 @@ module.exports = class ReferenceChaincode extends StorageChaincode {
         if (!data || tools.sizeOf(data) == 0) {
             throw new Error('no observations, please ensure you input the correct task id');
         } else {
-            let training = [];
+            let data_score = [];
             for (let uid in data) {
-                training.push(data[uid]);
+                data_score.push(data[uid]);
             }
-            const em = new ExpectationMaximization({numClusters: 1});
-            em.train(training);
-            // TODO: need a method to calculate the scores
-            let scores = em.predict(training);
+            let scores = this.score(data_score);
+            console.log("scores", scores);
             let results = [];
+            let pos = 0;
             for (let uid in data) {
-                let taskpts = this.createTaskpts(tid, uid, 10, 10);
+                let taskpts = this.createTaskpts(tid, uid, scores[pos++] || null, 10);
                 results.push(taskpts);
             }
             return Buffer.from(JSON.stringify(results));
         }
     }
+
+
+    score(data) {
+        const spawn = require('child_process').spawn;
+        const spawnSync = require('child_process').spawnSync;
+        let jsonData = JSON.stringify(data);
+        console.log("scoring data:", jsonData);
+        const child = spawnSync('python3', ['/scripts/quality.py', jsonData]);
+        const out = child.stdout.toString();
+        console.log("python results:", out);
+        try {
+            return JSON.parse(out);
+        } catch (e) {
+            console.log("error while scoring", e);
+            return [];
+        }
+    }
+
 
     /**
      * [1] return all the taskpts of task 1

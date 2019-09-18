@@ -3,6 +3,7 @@ const shim = require('fabric-shim');
 const Chaincode = require('./chaincode-reference');
 const mock = require("@theledger/fabric-mock-stub");
 
+
 async function main() {
     await new Promise(async function () {
         const ccuser = new mock.ChaincodeMockStub("ccuser", new Chaincode());
@@ -64,6 +65,37 @@ async function main() {
 
     });
 
+
+    /**
+     * @param {ChaincodeMockStub} ccuser
+     * @param {ChaincodeMockStub} cctask
+     * @param {ChaincodeMockStub} ccobservations
+     * @param {ChaincodeMockStub} cctaskpts
+     * @param {ChaincodeMockStub} ccreputation
+     * @param {ChaincodeMockStub} ccreport
+     */
+    async function test0(ccuser, cctask, ccobservations, cctaskpts, ccreputation, ccreport) {
+        console.log('test0');
+        const {spawn} = require('child_process');
+        const fs = require('fs');
+        const filePath = "/tmp/" + tools.uuid();
+        let data = [
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [5, 2, 1, 8],
+            [110, 55, 12, 21]
+        ];
+        fs.writeFile(filePath, JSON.stringify(data), function (err) {
+            if (err) return console.log(err);
+            let ls = spawn('python', ['/scripts/quality.py', filePath]);
+            ls.stdout.on('data', data => {
+                console.log(data.toString());
+            });
+        });
+    }
 
     /**
      * @param {ChaincodeMockStub} ccuser
